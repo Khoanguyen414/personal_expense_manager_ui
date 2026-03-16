@@ -1,36 +1,41 @@
 <template>
   <div class="dashboard fadeInUp">
-    <h2 class="page-title">📊 Tổng quan (Dashboard)</h2>
+    <h2 class="page-title">
+      <Icon
+        icon="fluent-emoji-flat:bar-chart"
+        width="30"
+        height="30"
+        style="vertical-align: text-bottom; margin-top: 8px"
+      />
+      Tổng quan (Dashboard)
+    </h2>
 
     <el-row :gutter="25" style="margin-bottom: 25px">
       <el-col :span="8">
-        <el-card shadow="hover" class="stat-card income floating-card">
-          <div class="stat-header">
-            <span class="stat-icon income-icon">💸</span>
-            <div class="stat-title">Tổng Thu Nhập</div>
-          </div>
-          <div class="stat-value">{{ tongThu.toLocaleString() }} đ</div>
-        </el-card>
+        <StatCard
+          title="Tổng Thu Nhập"
+          :value="tongThu.toLocaleString()"
+          icon-name="fluent-emoji-flat:money-with-wings"
+          gradient-class="background-income"
+        />
       </el-col>
 
       <el-col :span="8">
-        <el-card shadow="hover" class="stat-card expense floating-card">
-          <div class="stat-header">
-            <span class="stat-icon expense-icon">🛍️</span>
-            <div class="stat-title">Tổng Chi Tiêu</div>
-          </div>
-          <div class="stat-value">{{ tongChi.toLocaleString() }} đ</div>
-        </el-card>
+        <StatCard
+          title="Tổng Chi Tiêu"
+          :value="tongChi.toLocaleString()"
+          icon-name="fluent-emoji-flat:shopping-bags"
+          gradient-class="background-expense"
+        />
       </el-col>
 
       <el-col :span="8">
-        <el-card shadow="hover" class="stat-card balance floating-card">
-          <div class="stat-header">
-            <span class="stat-icon balance-icon">💳</span>
-            <div class="stat-title">Số Dư Hiện Tại</div>
-          </div>
-          <div class="stat-value">{{ soDu.toLocaleString() }} đ</div>
-        </el-card>
+        <StatCard
+          title="Số Dư Hiện Tại"
+          :value="soDu.toLocaleString()"
+          icon-name="fluent-emoji-flat:credit-card"
+          gradient-class="background-balance"
+        />
       </el-col>
     </el-row>
 
@@ -63,7 +68,9 @@
 </template>
 
 <script setup lang="ts">
-import axios from 'axios'
+import StatCard from '@/components/StatCard.vue'
+import transactionService from '@/services/transactionService'
+import { Icon } from '@iconify/vue'
 import {
   ArcElement,
   BarElement,
@@ -100,7 +107,7 @@ const barOptions = { responsive: true, maintainAspectRatio: false }
 
 const fetchStatistics = async () => {
   try {
-    const response = await axios.get('http://localhost:8080/api/transactions')
+    const response = await transactionService.getAll()
     const transactions = response.data
 
     let thu = 0
@@ -171,67 +178,6 @@ html.dark .page-title {
   height: 320px;
   display: flex;
   justify-content: center;
-}
-
-.floating-card {
-  transition: all 0.3s ease !important;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05) !important;
-}
-
-.floating-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
-}
-
-html.dark .floating-card {
-  box-shadow: 0 10px 25px rgba(64, 158, 255, 0.1) !important;
-}
-
-.stat-card {
-  text-align: center;
-  border-radius: 8px;
-  color: white;
-  height: 120px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  overflow: hidden;
-  position: relative;
-}
-
-.stat-card.income {
-  background: linear-gradient(135deg, #67c23a 0%, #a6df7f 100%);
-}
-
-.stat-card.expense {
-  background: linear-gradient(135deg, #f56c6c 0%, #fba0a0 100%);
-}
-
-.stat-card.balance {
-  background: linear-gradient(135deg, #409eff 0%, #85c4ff 100%);
-}
-
-.stat-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.stat-icon {
-  font-size: 20px;
-  opacity: 0.8;
-}
-
-.stat-title {
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.stat-value {
-  font-size: 26px;
-  font-weight: 900;
 }
 
 .modern-card {
