@@ -1,54 +1,88 @@
 <template>
-  <div class="transaction-page">
-    <h2 style="margin-bottom: 20px">💸 Quản lý Giao dịch</h2>
+  <div class="transaction fadeInUp">
+    <h2 class="page-title">💳 Quản lý Giao dịch</h2>
 
-    <el-card shadow="hover">
-      <el-button type="primary" @click="openAddModal" style="margin-bottom: 20px">
-        Thêm Giao Dịch
-      </el-button>
+    <el-card shadow="hover" class="filtering-card floating-tool modern-card">
+      <div class="filter-wrapper">
+        <span class="filter-label">🔍 Bộ lọc:</span>
 
-      <el-table :data="transactions" border stripe style="width: 100%">
-        <el-table-column prop="id" label="ID" width="60" align="center" />
+        <el-select v-model="filterType" placeholder="Loại" style="width: 140px">
+          <el-option label="Tất cả" value="ALL" />
+          <el-option label="Thu nhập" value="INCOME" />
+          <el-option label="Chi tiêu" value="EXPENSE" />
+        </el-select>
 
-        <el-table-column prop="amount" label="Số tiền" width="150">
+        <el-date-picker
+          v-model="filterMonth"
+          type="month"
+          placeholder="Chọn tháng"
+          format="MM/YYYY"
+          value-format="YYYY-MM"
+          style="width: 150px"
+        />
+
+        <el-button type="info" plain @click="clearFilter">Xóa lọc</el-button>
+
+        <div style="flex-grow: 1"></div>
+        <el-button type="success" @click="openAddModal"><b>+ Thêm Mới</b></el-button>
+      </div>
+
+      <el-table :data="filteredTransactions" style="width: 100%" class="modern-table floating-card">
+        <el-table-column prop="date" label="Ngày" width="120" align="center" />
+
+        <el-table-column prop="categoryName" label="Danh mục" width="180">
           <template #default="scope">
-            <b style="color: #409eff"> {{ scope.row.amount.toLocaleString() }} đ </b>
-          </template>
-        </el-table-column>
-
-        <el-table-column prop="type" label="Loại" width="120" align="center">
-          <template #default="scope">
-            <el-tag :type="scope.row.type === 'INCOME' ? 'success' : 'danger'">
-              {{ scope.row.type === 'INCOME' ? 'Thu nhập' : 'Chi tiêu' }}
+            <el-tag :type="scope.row.type === 'INCOME' ? 'success' : 'danger'" effect="light" round>
+              {{ scope.row.categoryName }}
             </el-tag>
           </template>
         </el-table-column>
 
-        <el-table-column prop="categoryName" label="Danh mục" width="150" />
-        <el-table-column prop="date" label="Ngày" width="120" align="center" />
+        <el-table-column prop="amount" label="Số tiền" align="right">
+          <template #default="scope">
+            <span :class="scope.row.type === 'INCOME' ? 'income-text' : 'expense-text'">
+              <b>{{ scope.row.amount.toLocaleString() }} đ</b>
+            </span>
+          </template>
+        </el-table-column>
+
         <el-table-column prop="description" label="Ghi chú" />
 
-        <el-table-column label="Thao tác" width="150" align="center">
+        <el-table-column label="Thao tác" width="130" align="center">
           <template #default="scope">
-            <el-button size="small" type="primary" @click="openEditModal(scope.row)">Sửa</el-button>
-            <el-button size="small" type="danger" @click="deleteTransaction(scope.row.id)"
-              >Xóa</el-button
-            >
+            <el-button size="small" type="primary" circle @click="openEditModal(scope.row)"
+              ><el-icon><Edit /></el-icon
+            ></el-button>
+
+            <el-button size="small" type="danger" circle @click="deleteTransaction(scope.row.id)"
+              ><el-icon><Delete /></el-icon
+            ></el-button>
           </template>
         </el-table-column>
       </el-table>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" title="Thêm Giao Dịch Mới" width="500px">
-      <el-form label-width="100px">
-        <el-form-item label="Loại">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="formData.id ? 'Sửa Giao Dịch' : 'Thêm Giao Dịch Mới'"
+      width="450px"
+      class="modern-dialog"
+    >
+      <el-form
+        ref="formRef"
+        :model="formData"
+        :rules="rules"
+        label-width="100px"
+        label-position="top"
+      >
+        <el-form-item label="Loại" prop="type">
           <el-radio-group v-model="formData.type">
-            <el-radio value="INCOME">Thu nhập</el-radio>
-            <el-radio value="EXPENSE">Chi tiêu</el-radio>
+            <el-radio-button label="INCOME">Thu nhập</el-radio-button>
+            <el-radio-button label="EXPENSE">Chi tiêu</el-radio-button>
           </el-radio-group>
         </el-form-item>
 
-        <el-form-item label="Ngày Giao dịch">
+        <el-form-item label="Ngày giao dịch">
           <el-date-picker
             v-model="formData.date"
             type="date"
@@ -60,11 +94,16 @@
         </el-form-item>
 
         <el-form-item label="Số tiền">
-          <el-input-number v-model="formData.amount" :min="0" style="width: 100%" />
+          <el-input-number v-model="formData.amount" :min="1000" :step="1000" style="width: 100%" />
         </el-form-item>
 
         <el-form-item label="Danh mục">
-          <el-select v-model="formData.categoryId" placeholder="Chọn danh mục" style="width: 100%">
+          <el-select
+            v-model="formData.categoryId"
+            filterable
+            placeholder="Gõ để tìm..."
+            style="width: 100%"
+          >
             <el-option v-for="cat in categories" :key="cat.id" :label="cat.name" :value="cat.id" />
           </el-select>
         </el-form-item>
@@ -75,23 +114,37 @@
       </el-form>
 
       <template #footer>
-        <span class="dialog-footer">
+        <div class="dialog-footer">
           <el-button @click="dialogVisible = false">Hủy</el-button>
-          <el-button type="primary" @click="saveTransaction">Lưu giao dịch</el-button>
-        </span>
+          <el-button type="primary" @click="saveTransaction">Lưu lại</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
+import { Delete, Edit } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
-const transactions = ref([])
+interface TransactionItem {
+  id: number
+  amount: number
+  type: string
+  categoryId: number
+  categoryName: string
+  date: string
+  description: string
+}
+
+const transactions = ref<TransactionItem[]>([])
 const categories = ref<any[]>([])
 const dialogVisible = ref(false)
+
+const filterType = ref('ALL')
+const filterMonth = ref('')
 
 const formData = ref({
   id: null as number | null,
@@ -101,6 +154,23 @@ const formData = ref({
   description: '',
   date: new Date().toISOString().split('T')[0],
 })
+
+const rules = {
+  amount: [
+    {
+      required: true,
+      message: 'Vui lòng nhập số tiền lớn hơn 0',
+      trigger: 'blur',
+    },
+  ],
+  categoryId: [
+    {
+      required: true,
+      message: 'Vui lòng chọn danh mục',
+      trigger: 'change',
+    },
+  ],
+}
 
 const openAddModal = () => {
   formData.value = {
@@ -161,8 +231,8 @@ const saveTransaction = async () => {
 }
 
 const deleteTransaction = (id: number) => {
-  ElMessageBox.confirm('Bạn có chắc chắn muốn xóa giao dịch này vĩnh viễn không?', 'Cảnh báo', {
-    confirmButtonText: 'Xóa ngay',
+  ElMessageBox.confirm('Bạn có chắc chắn muốn xóa giao dịch này vĩnh viễn không?', 'CẢNH BÁO', {
+    confirmButtonText: 'Xóa',
     cancelButtonText: 'Hủy',
     type: 'warning',
   })
@@ -181,10 +251,132 @@ const deleteTransaction = (id: number) => {
     })
 }
 
+const filteredTransactions = computed(() => {
+  return transactions.value.filter((tx) => {
+    const matchType = filterType.value === 'ALL' || tx.type === filterType.value
+
+    const matchMonth = !filterType.value || tx.date.startsWith(filterMonth.value)
+
+    return matchType && matchMonth
+  })
+})
+
+const clearFilter = () => {
+  filterType.value = 'ALL'
+  filterMonth.value = ''
+}
+
 onMounted(() => {
   fetchCategories()
   fetchTransactions()
 })
 </script>
 
-<style></style>
+<style scoped>
+.page-title {
+  color: #606266;
+  font-size: 24px;
+  margin-bottom: 25px;
+}
+
+html.dark .page-title {
+  color: #e5eaf3;
+}
+
+.filtering-card {
+  margin-bottom: 25px;
+  border-radius: 12px;
+}
+
+.filter-wrapper {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  padding: 5px;
+}
+
+.filter-label {
+  font-weight: bold;
+  color: #606266;
+  font-size: 15px;
+}
+
+html.dark .filter-label {
+  color: #e5eaf3;
+}
+
+.floating-tool {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03) !important;
+}
+
+html.dark .floating-tool {
+  background-color: #1e1e1e;
+  border-color: #333;
+}
+
+.modern-table {
+  border-radius: 12px;
+  overflow: hidden;
+  border: none !important;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.03);
+}
+
+.modern-table :deep(th.el-table__cell) {
+  background-color: #f5f7fa;
+  color: #606266;
+  font-weight: bold;
+}
+
+html.dark .modern-table :deep(th.el-table__cell) {
+  background-color: #2b2b2b;
+  color: #e5eaf3;
+}
+
+.modern-table :deep(.el-table__row) {
+  transition: all 0.3s ease;
+}
+
+.modern-table :deep(.el-table__row:hover) {
+  transform: scale(1.005);
+}
+
+.modern-dialog :deep(.el-dialog) {
+  border-radius: 16px;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.modern-dialog :deep(.el-dialog__header) {
+  background: linear-gradient(90deg, #ecf5ff, white);
+  padding: 15px 20px;
+}
+
+html.dark .modern-dialog :deep(.el-dialog__header) {
+  background: linear-gradient(90deg, #2b333f, #1e1e1e);
+}
+
+.income-text {
+  color: #67c23a;
+}
+
+.expense-text {
+  color: #f56c6c;
+}
+
+.fadeInUp {
+  animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+</style>

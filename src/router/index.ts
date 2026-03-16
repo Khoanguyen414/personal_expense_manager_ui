@@ -1,7 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import AboutView from '../views/AboutView.vue'
-import TransactionView from '../views/TransactionView.vue'
+import CategoryView from '@/views/CategoryView.vue'
+import AboutView from '@/views/AboutView.vue'
+import TransactionView from '@/views/TransactionView.vue'
+import DashboardView from '@/views/DashboardView.vue'
+import HomeView from '@/views/HomeView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -9,19 +11,29 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView
+      component: HomeView,
+    },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: DashboardView,
     },
     {
       path: '/about',
       name: 'about',
-      component: AboutView
+      component: AboutView,
     },
     {
       path: '/transactions',
       name: 'transactions',
-      component: TransactionView
-    }
-  ]
+      component: TransactionView,
+    },
+    {
+      path: '/categories',
+      name: 'categories',
+      component: CategoryView,
+    },
+  ],
 })
 
 export default router
